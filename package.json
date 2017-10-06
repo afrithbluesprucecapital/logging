@@ -1,0 +1,31 @@
+{
+  "name": "logging",
+  "version": "1.0.0",
+  "description": "A small library providing utility logging methods",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/afrithbluesprucecapital/logging.git"
+  },
+  "keywords": [
+    "winston",
+    "logging"
+  ],
+  "author": "Andy Frith <afrith@bluesprucecapital.com>",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/brentertz/scapegoat/blob/master/LICENSE-MIT"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/afrithbluesprucecapital/logging/issues"
+  },
+  "devDependencies": {
+    "mocha": "~1.16.2",
+    "chai": "~1.8.1"
+  }
+}
