@@ -1,58 +1,72 @@
-/**
- * Logging
- * https://github.com/afrithbluesprucecapital/logging
- *
- * Copyright (c) 2017 Andy Frith
- * Licensed under the MIT license.
- */
+import { _ } from 'lodash';
 
-var chars = {
-  '&amp;': '&',
-  '&quot;': '"',
-  '&#39;': '\'',
-  '&lt;': '<',
-  '&gt;': '>'
+const winston = require('winston');
+const fs = require('fs');
+
+const LOG_NAME = process.env.LOG_NAME || 'bsc-svc.log';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+const LOG_LEVEL_CONSOLE = process.env.LOG_LEVEL_CONSOLE || 'verbose';
+const LOG_DIR = '/svc/logs';
+
+// Create the log directory if it does not exist
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR);
+}
+const tsFormat = () => (new Date()).toLocaleTimeString();
+const LOGGER = new (winston.Logger)({
+  transports: [
+    // colorize the output to the console
+    new (winston.transports.Console)({
+      timestamp: tsFormat,
+      colorize: true,
+      level: LOG_LEVEL_CONSOLE,
+      showLevel: false,
+    }),
+    new (winston.transports.File)({
+      filename: `${LOG_DIR}/${LOG_NAME}`,
+      timestamp: tsFormat,
+      level: LOG_LEVEL,
+      json: false,
+      showLevel: false,
+    }),
+  ],
+});
+
+const log = (level, title, params, subTitle) => {
+  const rect = (level === 'error') ? '\x1b[41m   \x1b[0m' : '\x1b[42m   \x1b[0m';
+
+  if (level === 'info') {
+    LOGGER[level](title);
+  } else if (level === 'verbose') {
+    if (subTitle) {
+      LOGGER[level](
+        `${rect}  ${title} ---- ${subTitle}\n`,
+      );
+    } else {
+      LOGGER[level](
+        `${rect}  ${title}\n`,
+      );
+    }
+  } else {
+    let pStr = '\n';
+    _.each(params, (obj) => {
+      _.each(obj, (value, key) => {
+        pStr += `\n${key} \x1b[2m::: ${value}\x1b[0m`;
+      });
+    });
+
+    if (subTitle) {
+      LOGGER[level](
+        `\n\n${rect} ${title} ---------- ${subTitle} ---------- ${pStr}\n`,
+      );
+    } else {
+      LOGGER[level](
+        `\n\n${rect}  ${title} ---------- ${pStr}\n`,
+      );
+    }
+  }
 };
 
-/**
- * Escape special characters in the given string of html.
- *
- * @param  {String} html
- * @return {String}
- */
 module.exports = {
-  escape: function(html) {
-    if (!html) {
-      return '';
-    }
-
-    var values = Object.keys(chars).map(function(key) { return chars[key]; });
-    var re = new RegExp('(' + values.join('|') + ')', 'g');
-
-    return String(html).replace(re, function(match) {
-      for (var key in chars) {
-        if (chars.hasOwnProperty(key) && chars[key] === match) {
-          return key;
-        }
-      }
-    });
-  },
-
-  /**
-   * Unescape special characters in the given string of html.
-   *
-   * @param  {String} html
-   * @return {String}
-   */
-  unescape: function(html) {
-    if (!html) {
-      return '';
-    }
-
-    var re = new RegExp('(' + Object.keys(chars).join('|') + ')', 'g');
-
-    return String(html).replace(re, function(match) {
-      return chars[match];
-    });
-  }
+  LOGGER, log,
 };
